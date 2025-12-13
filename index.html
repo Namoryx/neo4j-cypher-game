@@ -238,6 +238,99 @@
         flex-direction: column;
         gap: 12px;
       }
+      .tab-nav {
+        display: flex;
+        gap: 8px;
+        padding: 0 16px 16px;
+      }
+      .tab-button {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: #e2e8f0;
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .tab-button.active {
+        background: linear-gradient(135deg, #06b6d4, #22d3ee);
+        color: #0b1220;
+        border-color: transparent;
+      }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+      .scroll-row {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(240px, 1fr);
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .stat-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 4px 0 8px;
+      }
+      .muted-list {
+        color: var(--muted);
+        font-size: 13px;
+        padding-left: 16px;
+        margin: 0;
+      }
+      .flex-between {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+      }
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 12px;
+      }
+      .table-card table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table-card th,
+      .table-card td {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 6px 8px;
+        text-align: left;
+        font-size: 13px;
+      }
+      .collapsible {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        background: #0a1221;
+        padding: 10px;
+        max-height: 240px;
+        overflow: auto;
+        transition: max-height 0.2s ease;
+      }
+      .collapsible.collapsed {
+        max-height: 0;
+        padding: 0 10px;
+        overflow: hidden;
+      }
+      .section-title {
+        margin: 0 0 8px;
+      }
       @media (max-width: 960px) {
         .container {
           grid-template-columns: 1fr;
@@ -287,51 +380,131 @@
       </div>
     </header>
 
-    <main class="container">
-      <section class="card">
-        <h3>퀘스트 목록</h3>
-        <ul id="quest-list"></ul>
-      </section>
+    <div class="tab-nav">
+      <button class="tab-button active" data-target="tab-quests">퀘스트</button>
+      <button class="tab-button" data-target="tab-explorer">Explorer</button>
+    </div>
 
-      <section class="card responsive">
-        <div>
-          <span class="badge" id="chapter-badge"></span>
-          <h2 id="quest-title"></h2>
-          <div class="detail-grid">
-            <div>
-              <h4>스토리</h4>
-              <p id="quest-story"></p>
-            </div>
-            <div>
-              <h4>목표</h4>
-              <p id="quest-goal"></p>
-            </div>
-            <div>
-              <h4>제약</h4>
-              <p id="quest-constraint"></p>
-            </div>
-            <div>
-              <h4>힌트</h4>
-              <p id="quest-hint"></p>
-            </div>
-          </div>
-          <div>
-            <h4>허용 연산</h4>
-            <div id="quest-allowed"></div>
-          </div>
-        </div>
+    <main>
+      <div id="tab-quests" class="tab-panel active">
+        <div class="container">
+          <section class="card">
+            <h3>퀘스트 목록</h3>
+            <ul id="quest-list"></ul>
+          </section>
 
-        <div>
-          <label for="cypher-input"><strong>Cypher 입력</strong></label>
-          <textarea id="cypher-input" placeholder="여기에 Cypher를 작성하세요"></textarea>
-          <div class="actions">
-            <button id="btn-run">실행만 하기</button>
-            <button id="btn-submit" class="primary">제출 및 채점</button>
-          </div>
-          <div id="feedback"></div>
-          <div id="result"></div>
+          <section class="card responsive">
+            <div>
+              <span class="badge" id="chapter-badge"></span>
+              <h2 id="quest-title"></h2>
+              <div class="detail-grid">
+                <div>
+                  <h4>스토리</h4>
+                  <p id="quest-story"></p>
+                </div>
+                <div>
+                  <h4>목표</h4>
+                  <p id="quest-goal"></p>
+                </div>
+                <div>
+                  <h4>제약</h4>
+                  <p id="quest-constraint"></p>
+                </div>
+                <div>
+                  <h4>힌트</h4>
+                  <p id="quest-hint"></p>
+                </div>
+              </div>
+              <div>
+                <h4>허용 연산</h4>
+                <div id="quest-allowed"></div>
+              </div>
+            </div>
+
+            <div>
+              <label for="cypher-input"><strong>Cypher 입력</strong></label>
+              <textarea id="cypher-input" placeholder="여기에 Cypher를 작성하세요"></textarea>
+              <div class="actions">
+                <button id="btn-run">실행만 하기</button>
+                <button id="btn-submit" class="primary">제출 및 채점</button>
+              </div>
+              <div id="feedback"></div>
+              <div id="result"></div>
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
+
+      <div id="tab-explorer" class="tab-panel">
+        <div class="container">
+          <section class="card" style="grid-column: 1 / -1;">
+            <div class="flex-between">
+              <div>
+                <h3 class="section-title">Explorer</h3>
+                <p class="subtitle">읽기 전용 요약과 샘플 데이터 미리보기</p>
+              </div>
+              <div class="actions" style="margin-top: 0;">
+                <button id="btn-refresh-explorer">요약 새로고침</button>
+                <button id="btn-toggle-log">로그 접기/펴기</button>
+              </div>
+            </div>
+            <div class="scroll-row" id="explorer-metrics">
+              <div class="stat-card">
+                <strong>그래프 개요</strong>
+                <div class="stat-value"><span id="count-nodes">-</span> 노드</div>
+                <div class="stat-value" style="font-size: 18px;"><span id="count-rels">-</span> 관계</div>
+                <p class="muted" style="margin: 0;">MATCH 기반 읽기 전용 집계</p>
+              </div>
+              <div class="stat-card">
+                <strong>상위 카테고리</strong>
+                <ol class="muted-list" id="list-categories"></ol>
+              </div>
+              <div class="stat-card">
+                <strong>Top Viewed</strong>
+                <ol class="muted-list" id="list-viewed"></ol>
+              </div>
+              <div class="stat-card">
+                <strong>Top Purchased</strong>
+                <ol class="muted-list" id="list-purchased"></ol>
+              </div>
+            </div>
+          </section>
+
+          <section class="card" style="grid-column: 1 / -1;">
+            <div class="flex-between">
+              <h4 class="section-title">빠른 조회/에디터 프리필</h4>
+              <small class="muted">/run 엔드포인트로 읽기 전용 실행</small>
+            </div>
+            <div class="quick-grid" id="quick-query-buttons"></div>
+            <div id="explorer-result" style="margin-top: 12px;"></div>
+          </section>
+
+          <section class="card preview-grid" style="grid-column: 1 / -1;">
+            <div class="table-card">
+              <div class="flex-between">
+                <h4 class="section-title">Users 프리뷰</h4>
+                <small class="muted">LIMIT 5</small>
+              </div>
+              <div id="preview-users"></div>
+            </div>
+            <div class="table-card">
+              <div class="flex-between">
+                <h4 class="section-title">Products 프리뷰</h4>
+                <small class="muted">LIMIT 5</small>
+              </div>
+              <div id="preview-products"></div>
+            </div>
+          </section>
+
+          <section class="card" style="grid-column: 1 / -1;">
+            <div class="flex-between">
+              <h4 class="section-title">Explorer 로그</h4>
+              <small class="muted">읽기 전용 호출 내역</small>
+            </div>
+            <div id="explorer-log" class="collapsible"></div>
+          </section>
+        </div>
+      </div>
     </main>
 
     <script type="module" src="./src/config.js"></script>
