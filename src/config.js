@@ -1,8 +1,9 @@
-export const API_BASE = window.API_BASE || 'https://your-worker.example.workers.dev';
+export const API_BASE = window.API_BASE || 'https://neo4j-runner.neo4j-namoryx.workers.dev';
 export const RUN_URL = `${API_BASE}/run`;
 export const SUBMIT_URL = `${API_BASE}/submit`;
 export const SEED_URL = `${API_BASE}/seed`;
 export const HEALTH_URL = `${API_BASE}/health`;
+export const IMPORT_URL = `${API_BASE}/import`;
 
 export async function apiFetch(url, options = {}) {
   const merged = {
