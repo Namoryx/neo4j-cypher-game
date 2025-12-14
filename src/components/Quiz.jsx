@@ -1,21 +1,31 @@
-import { useEffect, useState } from 'react';
-import questions from '../data/questions.json';
+import { useEffect, useRef, useState } from 'react';
 import QuestionCard from './QuestionCard.jsx';
 import Feedback from './Feedback.jsx';
 import { runCypher } from '../services/api.js';
 import { toRows } from '../utils/normalize.js';
 import { gradeCypher, gradeMcq } from '../utils/grading.js';
 
-function Quiz({ onSpeechChange, onMoodChange, onImpact, onResultsChange }) {
-  const [index, setIndex] = useState(0);
+function Quiz({
+  questions,
+  startingIndex = 0,
+  onSpeechChange,
+  onMoodChange,
+  onImpact,
+  onResultsChange,
+  onProgressUpdate,
+  onIndexPersist,
+  onIndexChange,
+}) {
+  const [index, setIndex] = useState(startingIndex);
   const [selectedOption, setSelectedOption] = useState(null);
   const [cypherText, setCypherText] = useState('');
   const [phase, setPhase] = useState('answering');
   const [isCorrect, setIsCorrect] = useState(null);
   const [lastError, setLastError] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const initializedRef = useRef(false);
 
-  const currentQuestion = questions[index];
+  const currentQuestion = questions?.[index];
   const questionType = currentQuestion?.type;
 
   useEffect(() => {
@@ -51,6 +61,21 @@ function Quiz({ onSpeechChange, onMoodChange, onImpact, onResultsChange }) {
     return undefined;
   }, [isCorrect, onImpact, phase]);
 
+  useEffect(() => {
+    if (!questions?.length) return;
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    setIndex(Math.min(startingIndex, questions.length - 1));
+  }, [questions, startingIndex]);
+
+  useEffect(() => {
+    if (questions?.length === 0) {
+      setIndex(0);
+    } else if (index >= questions.length) {
+      setIndex(0);
+    }
+  }, [index, questions]);
+
   const resetForNextQuestion = (nextIndex) => {
     setIndex(nextIndex);
     setSelectedOption(null);
@@ -59,6 +84,7 @@ function Quiz({ onSpeechChange, onMoodChange, onImpact, onResultsChange }) {
     setLastError(null);
     setPhase('answering');
     onResultsChange?.([]);
+    onIndexChange?.(nextIndex);
   };
 
   const handleSubmit = async () => {
@@ -75,6 +101,7 @@ function Quiz({ onSpeechChange, onMoodChange, onImpact, onResultsChange }) {
       setIsCorrect(mcqCorrect);
       setPhase('feedback');
       onResultsChange?.([]);
+      onProgressUpdate?.({ questionId: currentQuestion.id, isCorrect: mcqCorrect });
       return;
     }
 
@@ -91,6 +118,7 @@ function Quiz({ onSpeechChange, onMoodChange, onImpact, onResultsChange }) {
       const { isCorrect: cypherCorrect } = gradeCypher(currentQuestion, rows);
       setIsCorrect(cypherCorrect);
       setPhase('feedback');
+      onProgressUpdate?.({ questionId: currentQuestion.id, isCorrect: cypherCorrect });
     } catch (error) {
       setLastError(error?.message || '실행 중 오류가 발생했습니다.');
       onResultsChange?.([]);
@@ -103,15 +131,30 @@ function Quiz({ onSpeechChange, onMoodChange, onImpact, onResultsChange }) {
     const nextIndex = index + 1;
     if (nextIndex < questions.length) {
       resetForNextQuestion(nextIndex);
+      onIndexPersist?.(nextIndex);
       return;
     }
 
+    onIndexPersist?.(questions.length - 1);
     setPhase('finished');
   };
 
   const handleRestart = () => {
     resetForNextQuestion(0);
+    onIndexPersist?.(0);
   };
+
+  if (!questions?.length) {
+    return (
+      <div className="card quiz-card">
+        <p className="subtitle">그래프 문제 세트 · 프리뷰</p>
+        <div className="finished-card">
+          <h2 className="question-text">조건에 맞는 문제가 없습니다.</h2>
+          <p className="subtitle">필터를 수정하거나 스토리 모드로 돌아가 보세요.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentQuestion) return null;
 
