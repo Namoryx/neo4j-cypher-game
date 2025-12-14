@@ -6,7 +6,7 @@ import { runCypher } from '../services/api.js';
 import { toRows } from '../utils/normalize.js';
 import { gradeCypher, gradeMcq } from '../utils/grading.js';
 
-function Quiz({ onSpeechChange, onResultsChange }) {
+function Quiz({ onSpeechChange, onMoodChange, onImpact, onResultsChange }) {
   const [index, setIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [cypherText, setCypherText] = useState('');
@@ -16,22 +16,40 @@ function Quiz({ onSpeechChange, onResultsChange }) {
   const [isRunning, setIsRunning] = useState(false);
 
   const currentQuestion = questions[index];
+  const questionType = currentQuestion?.type;
 
   useEffect(() => {
-    if (!onSpeechChange) return;
+    if (!onSpeechChange && !onMoodChange) return;
 
     if (phase === 'finished') {
-      onSpeechChange('오늘도 레벨업 완료!');
+      onSpeechChange?.('오늘도 레벨업 완료!');
+      onMoodChange?.('happy');
       return;
     }
 
     if (phase === 'feedback') {
-      onSpeechChange(isCorrect ? '오예! 그래프가 웃고 있어!' : '흠… 그래프는 거짓말 안 해.');
+      onSpeechChange?.(isCorrect ? '오예! 그래프가 웃고 있어!' : '흠… 그래프는 거짓말 안 해.');
+      onMoodChange?.(isCorrect ? 'happy' : 'angry');
       return;
     }
 
-    onSpeechChange('문제 풀어봐!');
-  }, [isCorrect, onSpeechChange, phase]);
+    onSpeechChange?.('문제 풀어봐!');
+    onMoodChange?.(questionType === 'cypher' ? 'thinking' : 'ask');
+  }, [isCorrect, onMoodChange, onSpeechChange, phase, questionType]);
+
+  useEffect(() => {
+    if (!onImpact) return undefined;
+
+    if (phase === 'feedback') {
+      const impactType = isCorrect ? 'correct' : 'wrong';
+      onImpact(impactType);
+      const timer = setTimeout(() => onImpact(null), 600);
+      return () => clearTimeout(timer);
+    }
+
+    onImpact(null);
+    return undefined;
+  }, [isCorrect, onImpact, phase]);
 
   const resetForNextQuestion = (nextIndex) => {
     setIndex(nextIndex);
