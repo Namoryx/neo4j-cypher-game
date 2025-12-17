@@ -20,7 +20,7 @@ A Vite + React mini-game for practicing Neo4j Cypher through story and practice 
 GitHub Pages must serve the built `dist` output, not the raw `index.html` that points to `/src/main.jsx`. The repo is configured for a project page at `/neo4j-cyper-game/` via Vite's `base` setting.
 
 ### Automated (recommended)
-The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that builds and publishes the `dist` folder to GitHub Pages on every push to `main` (or manual `Run workflow`).
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that builds and publishes the `dist` folder to GitHub Pages on every push to `main` (or manual `Run workflow`). This keeps Pages from serving the dev `index.html` that references `/src/main.jsx`.
 
 1. In GitHub: **Settings → Pages**
    - Source: **GitHub Actions**
