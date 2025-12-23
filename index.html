@@ -8,33 +8,57 @@
   <body>
     <div id="root"></div>
     <script type="module">
+      const repoName = 'neo4j-cyper-game';
       const isLocal =
         location.hostname === 'localhost' ||
         location.hostname === '127.0.0.1' ||
         location.hostname === '0.0.0.0';
       const pathParts = location.pathname.split('/').filter(Boolean);
-      const base = pathParts.length ? `/${pathParts[0]}/` : '/';
-      const scriptSrc = isLocal ? '/src/main.jsx' : `${base}assets/app.js`;
-      const styleHref = isLocal ? null : `${base}assets/app.css`;
 
-      if (styleHref) {
-        const stylesheet = document.createElement('link');
-        stylesheet.rel = 'stylesheet';
-        stylesheet.href = styleHref;
-        document.head.appendChild(stylesheet);
-      }
+      const candidateBases = (() => {
+        if (isLocal) return ['/'];
+
+        const bases = [];
+        if (pathParts.length) {
+          bases.push(`/${pathParts[0]}/`);
+        }
+        if (!bases.includes(`/${repoName}/`)) {
+          bases.push(`/${repoName}/`);
+        }
+        if (!bases.includes('/')) {
+          bases.push('/');
+        }
+        return bases;
+      })();
 
       const loadScript = (src) => import(/* @vite-ignore */ src);
 
+      const tryLoadBundle = async () => {
+        for (const base of candidateBases) {
+          const scriptSrc = `${base}assets/app.js`;
+          const styleHref = `${base}assets/app.css`;
+
+          const response = await fetch(scriptSrc, { method: 'HEAD' });
+          if (!response.ok) continue;
+
+          const stylesheet = document.createElement('link');
+          stylesheet.rel = 'stylesheet';
+          stylesheet.href = styleHref;
+          document.head.appendChild(stylesheet);
+
+          await loadScript(scriptSrc);
+          return;
+        }
+
+        throw new Error('missing bundle');
+      };
+
       if (isLocal) {
-        loadScript(scriptSrc);
+        loadScript('/src/main.jsx');
       } else {
-        fetch(scriptSrc, { method: 'HEAD' })
-          .then((res) => {
-            if (!res.ok) throw new Error('missing bundle');
-            return loadScript(scriptSrc);
-          })
-          .catch(() => loadScript('/src/main.jsx'));
+        tryLoadBundle().catch(() => {
+          console.error('Unable to locate bundled assets. Check deployment.');
+        });
       }
     </script>
   </body>
