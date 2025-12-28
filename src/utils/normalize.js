@@ -11,12 +11,14 @@ function mapFieldsToRows(fields = [], values = []) {
 function mapRecordsToRows(records = []) {
   return records.map((record) => {
     const row = {};
-    const keys = record?.keys || [];
+    const keys = record?.keys || record?.columns || [];
 
     keys.forEach((key, idx) => {
       const value = Array.isArray(record?._fields)
         ? record._fields[idx]
-        : record?.[key] ?? record?.[idx];
+        : Array.isArray(record?.fields)
+          ? record.fields[idx]
+          : record?.[key] ?? record?.[idx];
       row[key] = value;
     });
 
@@ -27,7 +29,16 @@ function mapRecordsToRows(records = []) {
 export function toRows(responseJson = {}) {
   if (!responseJson) return [];
 
-  const records = responseJson?.data?.records || responseJson?.records;
+  const records = (() => {
+    if (Array.isArray(responseJson?.data?.records)) return responseJson.data.records;
+    if (Array.isArray(responseJson?.records)) return responseJson.records;
+    if (Array.isArray(responseJson?.result?.records)) return responseJson.result.records;
+    if (Array.isArray(responseJson?.data) && responseJson.data.every((item) => item?.keys)) {
+      return responseJson.data;
+    }
+    return null;
+  })();
+
   if (Array.isArray(records) && records.length) {
     return mapRecordsToRows(records);
   }
