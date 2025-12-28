@@ -11,25 +11,27 @@ export default defineConfig(({ command }) => {
   return {
     plugins: [react()],
     base,
-  build: {
-    rollupOptions: {
-      output: {
-        entryFileNames: 'assets/app.js',
-        chunkFileNames: 'assets/chunk-[hash].js',
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name && assetInfo.name.endsWith('.css')) {
-            return 'assets/app.css';
-          }
-          return 'assets/[name]-[hash][extname]';
-        }
-      }
-    }
-  },
-  test: {
-    environment: 'jsdom',
-    setupFiles: './src/test/setup.js',
-    globals: true,
-    include: ['src/test/**/*.{test,spec}.{js,jsx,ts,tsx}']
-  }
+    build: {
+      outDir: 'docs',
+      rollupOptions: {
+        output: {
+          entryFileNames: 'assets/app.js',
+          chunkFileNames: 'assets/chunk-[hash].js',
+          assetFileNames: (assetInfo) => {
+            if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+              return 'assets/app.css';
+            }
+            return 'assets/[name]-[hash][extname]';
+          },
+        },
+      },
+      emptyOutDir: true,
+    },
+    test: {
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.js',
+      globals: true,
+      include: ['src/test/**/*.{test,spec}.{js,jsx,ts,tsx}'],
+    },
   };
 });
