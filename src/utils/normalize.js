@@ -11,7 +11,7 @@ function mapFieldsToRows(fields = [], values = []) {
 function mapRecordsToRows(records = []) {
   return records.map((record) => {
     const row = {};
-    const keys = record?.keys || record?.columns || [];
+    const keys = record?.keys || record?.columns || Object.keys(record ?? {});
 
     keys.forEach((key, idx) => {
       const value = Array.isArray(record?._fields)
@@ -29,15 +29,18 @@ function mapRecordsToRows(records = []) {
 export function toRows(responseJson = {}) {
   if (!responseJson) return [];
 
-  const records = (() => {
-    if (Array.isArray(responseJson?.data?.records)) return responseJson.data.records;
-    if (Array.isArray(responseJson?.records)) return responseJson.records;
-    if (Array.isArray(responseJson?.result?.records)) return responseJson.result.records;
-    if (Array.isArray(responseJson?.data) && responseJson.data.every((item) => item?.keys)) {
-      return responseJson.data;
-    }
-    return null;
-  })();
+  const recordSources = [
+    responseJson?.data?.records,
+    responseJson?.records,
+    responseJson?.result?.records,
+    responseJson?.data?.result?.records,
+    responseJson?.result?.data?.records,
+    Array.isArray(responseJson?.data) && responseJson.data.every((item) => item?.keys)
+      ? responseJson.data
+      : null,
+  ];
+
+  const records = recordSources.find((candidate) => Array.isArray(candidate));
 
   if (Array.isArray(records) && records.length) {
     return mapRecordsToRows(records);
@@ -45,6 +48,10 @@ export function toRows(responseJson = {}) {
 
   if (responseJson?.data?.fields && Array.isArray(responseJson?.data?.values)) {
     return mapFieldsToRows(responseJson.data.fields, responseJson.data.values);
+  }
+
+  if (responseJson?.result?.data?.fields && Array.isArray(responseJson?.result?.data?.values)) {
+    return mapFieldsToRows(responseJson.result.data.fields, responseJson.result.data.values);
   }
 
   if (Array.isArray(responseJson?.data?.results) && responseJson.data.results[0]?.data) {
