@@ -35,6 +35,7 @@ async function fetchWithConfig({ url, headers, body, timeoutMs = 5000 }) {
       signal: controller?.signal
     });
 
+    let json;
     try {
       json = await res.json();
     } catch (error) {
