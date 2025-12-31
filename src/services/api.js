@@ -45,6 +45,7 @@ async function fetchWithConfig({ url, headers, body, timeoutMs = 5000 }) {
       const message = json?.error?.message || json?.message || json?.error || 'Request failed';
       throw new Error(message);
     }
+  }
 
     return json;
   } catch (error) {
