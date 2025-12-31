@@ -183,8 +183,9 @@ function App() {
         </header>
         <main className="app-main">
           <section className="app-layout">
-            <QuokkaCharacter speech={speech} mood={mood} />
-            <div className="app-panels">
+            <div className="app-primary">
+              <QuokkaCharacter speech={speech} mood={mood} />
+              <div className="app-panels">
               {activeTab === 'quiz' ? (
                 <>
                   <FilterPanel
@@ -244,9 +245,12 @@ function App() {
               {activeTab === 'curriculum' ? (
                 <Curriculum questions={questions} progress={progress.records} onLessonSelect={handleCurriculumSelect} />
               ) : null}
+              </div>
+            </div>
+            <aside className="app-sidebar" aria-label="Query results">
               <ResultPanel rows={rows} />
               <DiagnosticsPanel lastRun={lastRun} />
-            </div>
+            </aside>
           </section>
         </main>
       </div>

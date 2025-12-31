@@ -102,16 +102,31 @@ body {
 
 .app-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: 3fr 2fr;
   gap: 20px;
-  width: min(1080px, 100%);
+  width: min(1180px, 100%);
   align-items: start;
+}
+
+.app-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .app-panels {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.app-sidebar {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-self: start;
 }
 
 .card {
@@ -830,6 +845,15 @@ body {
 }
 
 @media (max-width: 900px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .app-sidebar {
+    position: static;
+    width: 100%;
+  }
+
   .data-browser {
     grid-template-columns: 1fr;
   }
