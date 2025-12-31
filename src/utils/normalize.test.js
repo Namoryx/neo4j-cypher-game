@@ -73,4 +73,36 @@ describe('toRows', () => {
 
     expect(toRows(response)).toEqual([{ title: 'Matrix' }, { title: 'John Wick' }]);
   });
+
+  it('reads result.results response shape', () => {
+    const response = {
+      result: {
+        results: [
+          {
+            columns: ['name'],
+            data: [{ row: ['Neo'] }, { row: ['Trinity'] }],
+          },
+        ],
+      },
+    };
+
+    expect(toRows(response)).toEqual([{ name: 'Neo' }, { name: 'Trinity' }]);
+  });
+
+  it('reads data.result.results response shape', () => {
+    const response = {
+      data: {
+        result: {
+          results: [
+            {
+              columns: ['city'],
+              data: [{ row: ['Seoul'] }],
+            },
+          ],
+        },
+      },
+    };
+
+    expect(toRows(response)).toEqual([{ city: 'Seoul' }]);
+  });
 });

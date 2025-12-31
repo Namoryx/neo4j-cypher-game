@@ -86,6 +86,24 @@ export function toRows(responseJson = {}) {
     }
   }
 
+  if (Array.isArray(responseJson?.result?.results) && responseJson.result.results[0]?.data) {
+    const first = responseJson.result.results[0];
+    if (first?.columns && Array.isArray(first.data)) {
+      const fields = first.columns;
+      const values = first.data.map((item) => item?.row ?? item);
+      return mapFieldsToRows(fields, values);
+    }
+  }
+
+  if (Array.isArray(responseJson?.data?.result?.results) && responseJson.data.result.results[0]?.data) {
+    const first = responseJson.data.result.results[0];
+    if (first?.columns && Array.isArray(first.data)) {
+      const fields = first.columns;
+      const values = first.data.map((item) => item?.row ?? item);
+      return mapFieldsToRows(fields, values);
+    }
+  }
+
   if (Array.isArray(responseJson?.results)) {
     const first = responseJson.results[0];
     if (first?.columns && Array.isArray(first?.data)) {
