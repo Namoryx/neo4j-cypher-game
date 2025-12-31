@@ -22,26 +22,40 @@ function encodeBasicAuth(username, password) {
   return Buffer.from(`${username}:${password}`).toString('base64');
 }
 
-async function fetchWithConfig({ url, headers, body }) {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headers },
-    body: JSON.stringify(body)
-  });
+async function fetchWithConfig({ url, headers, body, timeoutMs = 5000 }) {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
-  let json;
   try {
-    json = await res.json();
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify(body),
+      signal: controller?.signal
+    });
+
+    let json;
+    try {
+      json = await res.json();
+    } catch (error) {
+      // ignore JSON parse error here; the caller will decide how to handle
+    }
+
+    if (!res.ok) {
+      const message = json?.error?.message || json?.message || json?.error || 'Request failed';
+      throw new Error(message);
+    }
+  }
+
+    return json;
   } catch (error) {
-    // ignore JSON parse error here; the caller will decide how to handle
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out');
+    }
+    throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
-
-  if (!res.ok) {
-    const message = json?.error?.message || json?.message || json?.error || 'Request failed';
-    throw new Error(message);
-  }
-
-  return json;
 }
 
 function buildDirectConfig(query, params) {
@@ -71,14 +85,25 @@ function buildDirectConfig(query, params) {
   };
 }
 
-function buildWorkerConfig(query, params) {
+function buildWorkerConfigs(query, params) {
   const workerUrl = readEnv('VITE_NEO4J_WORKER_URL') || DEFAULT_WORKER_URL;
+  const candidates = new Set();
 
-  return {
-    url: workerUrl,
+  candidates.add(workerUrl);
+
+  // Try both the provided path and a sibling with/without the trailing "/run"
+  if (workerUrl.endsWith('/run')) {
+    candidates.add(workerUrl.slice(0, -4));
+  } else {
+    const normalized = workerUrl.endsWith('/') ? workerUrl.slice(0, -1) : workerUrl;
+    candidates.add(`${normalized}/run`);
+  }
+
+  return Array.from(candidates).map((url) => ({
+    url,
     headers: {},
     body: { cypher: query, params }
-  };
+  }));
 }
 
 function getMockFallback(query) {
@@ -108,20 +133,30 @@ export async function runCypher(query, params = {}) {
   }
 
   const directConfig = buildDirectConfig(query, params);
-  const workerConfig = buildWorkerConfig(query, params);
+  const workerConfigs = buildWorkerConfigs(query, params);
 
   try {
     if (directConfig) {
       try {
-        const json = await fetchWithConfig(directConfig);
+        const json = await fetchWithConfig({ ...directConfig, timeoutMs: 5000 });
         return normalizeResponse(json, query);
       } catch (error) {
         console.warn('Direct Neo4j call failed, falling back to worker.', error.message);
       }
     }
 
-    const json = await fetchWithConfig(workerConfig);
-    return normalizeResponse(json, query);
+    for (const workerConfig of workerConfigs) {
+      try {
+        const json = await fetchWithConfig({ ...workerConfig, timeoutMs: 2500 });
+        return normalizeResponse(json, query);
+      } catch (workerError) {
+        console.warn(
+          `Worker call failed at ${workerConfig.url}, trying next candidate if available.`,
+          workerError.message
+        );
+      }
+    }
+    throw new Error('All worker endpoints failed.');
   } catch (error) {
     const mock = getMockFallback(query);
     if (mock) {
