@@ -7,6 +7,37 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="./src/main.jsx"></script>
+    <script type="module" id="vite-entry" src="/src/main.jsx"></script>
+    <script>
+      const base = window.__APP_BASE__ || (location.pathname.includes('/neo4j-cyper-game/') ? '/neo4j-cyper-game/' : '/');
+
+      function loadProdBundle() {
+        const entry = document.getElementById('vite-entry');
+        if (entry) {
+          entry.remove();
+        }
+
+        const cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = `${base}assets/app.css`;
+        document.head.appendChild(cssLink);
+
+        const prodScript = document.createElement('script');
+        prodScript.type = 'module';
+        prodScript.src = `${base}assets/app.js`;
+        document.body.appendChild(prodScript);
+      }
+
+      window.addEventListener(
+        'error',
+        (event) => {
+          const target = event?.target;
+          if (target?.tagName === 'SCRIPT' && target.src && target.src.includes('/src/main.jsx')) {
+            loadProdBundle();
+          }
+        },
+        { once: true }
+      );
+    </script>
   </body>
 </html>
