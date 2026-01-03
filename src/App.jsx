@@ -269,11 +269,22 @@ function App() {
               {activeTab === 'quiz' ? (
                 <>
                   {mode === 'story' ? (
-                    <StoryThemes
-                      themes={storyThemes}
-                      activeTheme={storyTheme}
-                      onSelect={handleStoryThemeChange}
-                    />
+                    <section className="story-section" aria-label="스토리 테마 안내">
+                      <div className="story-section__header">
+                        <p className="story-section__eyebrow">Story Mode</p>
+                        <div>
+                          <h2 className="story-section__title">4가지 테마 중 하나를 골라 진행하세요</h2>
+                          <p className="story-section__hint">
+                            도메인별로 준비된 문제 세트가 있습니다. 테마를 바꾸면 해당 영역의 문제로 바로 이동합니다.
+                          </p>
+                        </div>
+                      </div>
+                      <StoryThemes
+                        themes={storyThemes}
+                        activeTheme={storyTheme}
+                        onSelect={handleStoryThemeChange}
+                      />
+                    </section>
                   ) : null}
                   <FilterPanel
                     domains={domains}
